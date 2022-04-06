@@ -40,6 +40,6 @@ svmmodel.fit(X_trainsvm, ytrainsvm)
 y_prediction = svmmodel.predict(X_testsvm)
 confusion_matrix(y_test_, y_prediction)
 
-print("Accuracy is ",sklearn.metrics.accuracy_score(y_test_,svmmodel.predict(X_testsvm))*100,"%")
+print("Accuracy of the model is ",sklearn.metrics.accuracy_score(y_test_,svmmodel.predict(X_testsvm))*100,"%")
 plot_confusion_matrix(svmmodel, X_testsvm, y_test_)
 plt.show()

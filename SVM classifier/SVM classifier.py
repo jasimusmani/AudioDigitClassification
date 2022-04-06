@@ -33,13 +33,15 @@ def SVM(X, y, cv=3):
 # To find the best parameters using Randomized Search
 # SVM(X_trainsvm, ytrainsvm, cv = 3)
 
-#The values found from randomized search are C =15 and gamma = 0.001
-svmmodel = sklearn.svm.SVC(C=15, kernel='rbf', gamma= 0.001)
+
+# The values found from randomized search are C =15 and gamma = 0.001
+svmmodel = sklearn.svm.SVC(C=15, kernel='rbf', gamma=0.001)
 svmmodel.fit(X_trainsvm, ytrainsvm)
 
 y_prediction = svmmodel.predict(X_testsvm)
 confusion_matrix(y_test_, y_prediction)
 
-print("Accuracy of the model is ",sklearn.metrics.accuracy_score(y_test_,svmmodel.predict(X_testsvm))*100,"%")
+print("Accuracy of the model is ", sklearn.metrics.accuracy_score(
+    y_test_, svmmodel.predict(X_testsvm))*100, "%")
 plot_confusion_matrix(svmmodel, X_testsvm, y_test_)
 plt.show()

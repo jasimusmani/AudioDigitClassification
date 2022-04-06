@@ -11,29 +11,48 @@ AUTOTUNE = tf.data.AUTOTUNE
 
 
 def get_train_val_test_ds(train_files, val_files, test_files):
+    """
+    This function creates the tensorSlideDataset from the files to then extract the audio-label from them
+    :param train_files:Tensor(str)
+    :param val_files:Tensor(str)
+    :param test_files:Tensor(str)
+    :return: TensorSliceDataset(str) of the train, validation and test dataset
+    """
     train_ds = tf.data.Dataset.from_tensor_slices(train_files)
     val_ds = tf.data.Dataset.from_tensor_slices(val_files)
     test_ds = tf.data.Dataset.from_tensor_slices(test_files)
-
     return train_ds, val_ds, test_ds
 
 
 def get_input_shape(spectrogram_ds):
+    """
+    This function returns the Input shape: (124, 129, 1) of the train_spectrogram
+    :param spectrogram_ds:ParallelMapDataset
+    :return:TensorShape(141,129,1)
+    """
     for spectrogram, _ in spectrogram_ds.take(1):
         input_shape = spectrogram.shape
     return input_shape
 
 
 def norm(train_ds):
+    """
+    This function normalize each pixel in the image based on the mean and standard deviation of the pixels.
+    :param train_ds:ParallelMapDataset
+    :return:layers.Normalization
+    """
+
     # Instantiate the `tf.keras.layers.Normalization` layer.
     norm_layer = layers.Normalization()
-    # Fit the state of the layer to the spectrograms
-    # with `Normalization.adapt`.
+    # Fit the state of the layer to the spectrogram's with `Normalization.adapt`.
     norm_layer.adapt(data=train_ds.map(map_func=lambda spec, label: spec))
     return norm_layer
 
 
 class SpatialAttention_maxAvg(layers.Layer):
+    """
+    This function get the layer and add the max and avg attention to the axis=3 of the  to it
+    """
     def __init__(self, kernel_size=7):
         super().__init__()
         self.kernel_size = kernel_size
@@ -94,10 +113,17 @@ class SpatialAttention(layers.Layer):
 
 
 def create_model(num_labels, input_shape, norm_layer):
+    """
+
+    :param num_labels:
+    :param input_shape:
+    :param norm_layer:
+    :return:
+    """
     model = models.Sequential([
         layers.Input(shape=input_shape),
-        # Downsample the input.
-        layers.Resizing(64, 64),
+        # Down-sample the input.
+        layers.Resizing(32, 32),
         # Normalize.
         norm_layer,
         layers.Conv2D(32, 3, activation='relu'),
@@ -106,8 +132,7 @@ def create_model(num_labels, input_shape, norm_layer):
         layers.Conv2D(64, 3, activation='relu'),
         layers.Conv2D(128, 3, activation='relu'),
         # SpatialAttention_maxAvg(),
-        #     SpatialAttention(mode='max'),
-        #     layers.GlobalAveragePooling2D(),
+        # SpatialAttention(mode='mean'),
         layers.GlobalMaxPooling2D(),
         layers.Dropout(0.25),
         layers.Flatten(),
@@ -120,6 +145,12 @@ def create_model(num_labels, input_shape, norm_layer):
 
 
 def compile_model(model):
+    """
+    This function Configure the model with the Adam optimizer and the cross-entropy loss:
+    :param model:models.Sequential
+    :return:
+    """
+
     model.compile(
         optimizer=tf.keras.optimizers.Adam(),
         loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
@@ -128,6 +159,15 @@ def compile_model(model):
 
 
 def fit_model(model, train_ds, val_ds):
+    """
+    This function fits the train_ds and valid_ds into our model with early stopping of patience=2
+    :param model:models.Sequential
+    :param train_ds:ParallelMapDataset
+    :param val_ds:ParallelMapDataset
+    :return:
+    """
+
+    #train the model for 30 epochs
     EPOCHS = 30
     history = model.fit(
         train_ds,
@@ -138,6 +178,13 @@ def fit_model(model, train_ds, val_ds):
 
 
 def predict_model(model, test_ds):
+    """
+    This function calculate the predicts of the test_ds in our model, in our test part we do not batch the test dataset,
+    we make an array of the audios and labels and fit into the model
+    :param model:models.Sequential
+    :param test_ds:ParallelMapDataset
+    :return:
+    """
     test_audio = []
     test_labels = []
 
@@ -157,10 +204,16 @@ def predict_model(model, test_ds):
 
 
 def train_model():
+    # Set the seed value for experiment reproducibility.
+    seed = 42
+    tf.random.set_seed(seed)
+    np.random.seed(seed)
+
     batch_size = 64
 
-    filenames = preprocessing.get_filenames()
+    #retreive the data
     data = preprocessing.get_data()
+
 
     digits = data['digit'].unique()
     digits.sort()
@@ -168,9 +221,7 @@ def train_model():
     num_labels = len(digits)
     max_len = data['len'].max()
 
-    train_files = filenames[:2700]
-    val_files = filenames[2700:2850]
-    test_files = filenames[-150:]
+    train_files, val_files, test_files = preprocessing.get_random_shuffle_files()
 
     train_ds, val_ds, test_ds = get_train_val_test_ds(train_files, val_files, test_files)
 
@@ -186,7 +237,6 @@ def train_model():
 
     val_spectrogram = val_spectrogram.batch(batch_size)
     val_spectrogram = val_spectrogram.cache().prefetch(AUTOTUNE)
-
 
     model = create_model(num_labels, input_shape, norm_layer)
     compile_model(model)

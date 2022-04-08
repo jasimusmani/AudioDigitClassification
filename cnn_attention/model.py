@@ -19,6 +19,7 @@ def get_train_val_test_ds(train_files, val_files, test_files):
     :return: tf.data.Dataset of the train, validation and test dataset
     """
     train_ds = tf.data.Dataset.from_tensor_slices(train_files)
+    train_ds = train_ds.shuffle(len(train_files))
     val_ds = tf.data.Dataset.from_tensor_slices(val_files)
     test_ds = tf.data.Dataset.from_tensor_slices(test_files)
     return train_ds, val_ds, test_ds
@@ -51,7 +52,7 @@ def norm(train_ds):
 
 class SpatialAttention_maxAvg(layers.Layer):
     """
-    This function get the layer and add the max and avg attention to the axis=3 of the  to it
+    This function get the layer and add the max and avg attention to the axis=3 and calculate the score map of attention
     """
     def __init__(self, kernel_size=7):
         super().__init__()
@@ -70,13 +71,9 @@ class SpatialAttention_maxAvg(layers.Layer):
         score_map = input_feature
 
         avg_pool = self.avg_pool(score_map)
-        assert avg_pool.get_shape()[-1] == 1
         max_pool = self.max_pool(score_map)
-        assert max_pool.get_shape()[-1] == 1
         concat = layers.Concatenate(axis=3)([avg_pool, max_pool])
-        assert concat.get_shape()[-1] == 2
         score_map = self.feature(concat)
-        assert score_map.get_shape()[-1] == 1
 
         return layers.multiply([input_feature, score_map])
 

@@ -4,23 +4,31 @@ import tensorflow as tf
 import librosa.display
 import pandas as pd
 from tqdm import tqdm
+import gdown
+import zipfile
+import fnmatch
 
 dataset_path = 'data/recordings/'
 AUTOTUNE = tf.data.AUTOTUNE
 
-def get_random_shuffle_files(filenames, train_sz=2700, val_sz=150, test_sz=150):
+def get_random_shuffle_files(filenames, train_sz=240, val_sz=30, test_sz=30):
     """This function extract recording files and Randomly shuffles them along its first dimension.
         then split the data into train/val/test parts by 90-5-5 percents respectively."""
 
-    # url = 'https://raw.githubusercontent.com/jbrownlee/Datasets/master/ionosphere.csv'
-    # dataframe = read_csv(url, header=None)
+    train_files, val_files, test_files = [], [], []
+    for i in range(10):
+        fnames = fnmatch.filter(filenames, dataset_path + f'{str(i)}*')
+        fnames = tf.random.shuffle(fnames)
+        train_files.extend(fnames[:train_sz])
+        val_files.extend(fnames[train_sz:train_sz+val_sz])
+        test_files.extend(fnames[-test_sz:])
 
-    # shuffle recordings
-    filenames = tf.random.shuffle(filenames)
 
-    train_files = filenames[:train_sz]
-    val_files = filenames[train_sz:train_sz+val_sz]
-    test_files = filenames[-test_sz:]
+    # filenames = tf.random.shuffle(filenames)
+    #
+    # train_files = filenames[:train_sz]
+    # val_files = filenames[train_sz:train_sz+val_sz]
+    # test_files = filenames[-test_sz:]
 
     return train_files, val_files, test_files
 
@@ -29,6 +37,13 @@ def get_data(size=-1):
     """This function put the information of the recording wav into a tabular data structure.
        and librosa load an audio file as a floating point time series.
        size is for the debugging purposes."""
+
+    url = 'https://drive.google.com/file/d/1TMjMYrTKwOWjYSQw9-JqQZ8vTDCcLLz5/view?usp=sharing'
+    output = 'data/recordings.zip'
+    if not os.path.exists(dataset_path):
+        gdown.download(url, output, quiet=False, fuzzy=True)
+        with zipfile.ZipFile(output, 'r') as zip_ref:
+            zip_ref.extractall('data')
 
     data = pd.DataFrame(columns=['raw_data', 'len', 'duration', 'digit', 'sample_rate', 'dir', 'shape'])
     for idx, i in enumerate(tqdm(os.listdir(dataset_path))):

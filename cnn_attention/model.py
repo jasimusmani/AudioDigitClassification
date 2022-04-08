@@ -16,7 +16,7 @@ def get_train_val_test_ds(train_files, val_files, test_files):
     :param train_files:Tensor(str)
     :param val_files:Tensor(str)
     :param test_files:Tensor(str)
-    :return: TensorSliceDataset(str) of the train, validation and test dataset
+    :return: tf.data.Dataset of the train, validation and test dataset
     """
     train_ds = tf.data.Dataset.from_tensor_slices(train_files)
     val_ds = tf.data.Dataset.from_tensor_slices(val_files)
@@ -42,9 +42,9 @@ def norm(train_ds):
     :return:layers.Normalization
     """
 
-    # Instantiate the `tf.keras.layers.Normalization` layer.
+    # Instantiate the "tf.keras.layers.Normalization" layer.
     norm_layer = layers.Normalization()
-    # Fit the state of the layer to the spectrogram's with `Normalization.adapt`.
+    # Fit the state of the layer to the spectrogram's with "Normalization.adapt".
     norm_layer.adapt(data=train_ds.map(map_func=lambda spec, label: spec))
     return norm_layer
 
@@ -81,37 +81,6 @@ class SpatialAttention_maxAvg(layers.Layer):
         return layers.multiply([input_feature, score_map])
 
 
-class SpatialAttention(layers.Layer):
-    def __init__(self, kernel_size=7, mode='mean'):
-        super().__init__()
-        self.kernel_size = kernel_size
-        if mode == 'mean':
-            func = lambda x: K.mean(x, axis=3, keepdims=True)
-        else:
-            func = lambda x: K.max(x, axis=3, keepdims=True)
-
-        self.pool = layers.Lambda(func)
-        self.feature = layers.Conv2D(filters=1,
-                                     kernel_size=self.kernel_size,
-                                     strides=1,
-                                     padding='same',
-                                     activation='sigmoid',
-                                     kernel_initializer='he_normal',
-                                     use_bias=False)
-
-    def call(self, input_feature):
-
-        score_map = input_feature
-
-        pool = self.pool(score_map)
-        assert pool.get_shape()[-1] == 1
-
-        score_map = self.feature(pool)
-        assert score_map.get_shape()[-1] == 1
-
-        return layers.multiply([input_feature, score_map])
-
-
 def create_model(num_labels, input_shape, norm_layer):
     """
 
@@ -131,8 +100,8 @@ def create_model(num_labels, input_shape, norm_layer):
         layers.MaxPooling2D(),
         layers.Conv2D(64, 3, activation='relu'),
         layers.Conv2D(128, 3, activation='relu'),
-        # SpatialAttention_maxAvg(),
-        # SpatialAttention(mode='mean'),
+        SpatialAttention_maxAvg(),
+        # layers.GlobalAveragePooling2D(),
         layers.GlobalMaxPooling2D(),
         layers.Dropout(0.25),
         layers.Flatten(),
@@ -158,7 +127,7 @@ def compile_model(model):
     )
 
 
-def fit_model(model, train_ds, val_ds):
+def fit_model(model, train_ds, val_ds, checkpoint_filepath):
     """
     This function fits the train_ds and valid_ds into our model with early stopping of patience=2
     :param model:models.Sequential
@@ -168,12 +137,15 @@ def fit_model(model, train_ds, val_ds):
     """
 
     #train the model for 30 epochs
-    EPOCHS = 30
+    EPOCHS = 50
     history = model.fit(
         train_ds,
         validation_data=val_ds,
         epochs=EPOCHS,
-        callbacks=tf.keras.callbacks.EarlyStopping(verbose=1, patience=2),
+        callbacks=[
+            #tf.keras.callbacks.EarlyStopping(verbose=1, patience=20),
+                   tf.keras.callbacks.ModelCheckpoint(save_best_only=True, save_weights_only=True,
+                                                      filepath=checkpoint_filepath)],
     )
 
 
@@ -209,11 +181,12 @@ def train_model():
     tf.random.set_seed(seed)
     np.random.seed(seed)
 
+    checkpoint_filepath = "checkpoint.pth"
+
     batch_size = 64
 
     #retreive the data
     data = preprocessing.get_data()
-
 
     digits = data['digit'].unique()
     digits.sort()
@@ -221,7 +194,7 @@ def train_model():
     num_labels = len(digits)
     max_len = data['len'].max()
 
-    train_files, val_files, test_files = preprocessing.get_random_shuffle_files()
+    train_files, val_files, test_files = preprocessing.get_random_shuffle_files(data['dir'].to_list())
 
     train_ds, val_ds, test_ds = get_train_val_test_ds(train_files, val_files, test_files)
 
@@ -240,7 +213,10 @@ def train_model():
 
     model = create_model(num_labels, input_shape, norm_layer)
     compile_model(model)
-    fit_model(model, train_spectrogram, val_spectrogram)
+    fit_model(model, train_spectrogram, val_spectrogram, checkpoint_filepath)
+
+    model.load_weights(checkpoint_filepath)
+
     test_acc = predict_model(model, test_spectrogram)
     print("test accuracy:", test_acc)
 

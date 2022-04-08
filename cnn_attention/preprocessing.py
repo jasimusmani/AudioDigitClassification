@@ -8,32 +8,37 @@ from tqdm import tqdm
 dataset_path = 'data/recordings/'
 AUTOTUNE = tf.data.AUTOTUNE
 
-def get_random_shuffle_files():
+def get_random_shuffle_files(filenames, train_sz=2700, val_sz=150, test_sz=150):
     """This function extract recording files and Randomly shuffles them along its first dimension.
         then split the data into train/val/test parts by 90-5-5 percents respectively."""
 
     # url = 'https://raw.githubusercontent.com/jbrownlee/Datasets/master/ionosphere.csv'
     # dataframe = read_csv(url, header=None)
 
-    # extracting recordings
-    filenames = tf.io.gfile.glob(dataset_path + '*')
+    # shuffle recordings
     filenames = tf.random.shuffle(filenames)
 
-    train_files = filenames[:2700]
-    val_files = filenames[2700:2850]
-    test_files = filenames[-150:]
+    train_files = filenames[:train_sz]
+    val_files = filenames[train_sz:train_sz+val_sz]
+    test_files = filenames[-test_sz:]
 
     return train_files, val_files, test_files
 
 
-def get_data():
+def get_data(size=-1):
     """This function put the information of the recording wav into a tabular data structure.
-       and librosa load an audio file as a floating point time series."""
+       and librosa load an audio file as a floating point time series.
+       size is for the debugging purposes."""
+
     data = pd.DataFrame(columns=['raw_data', 'len', 'duration', 'digit', 'sample_rate', 'dir', 'shape'])
-    for i in tqdm(os.listdir(dataset_path)):
+    for idx, i in enumerate(tqdm(os.listdir(dataset_path))):
         raw_data, frame_rate = librosa.load(dataset_path + i, sr=None, mono=False)
         duration = librosa.get_duration(y=raw_data, sr=frame_rate)
-        data.loc[len(data.index)] = [raw_data, len(raw_data), duration, i.split('_')[0], frame_rate, i, raw_data.shape]
+        data.loc[len(data.index)] = [raw_data, len(raw_data), duration, i.split('_')[0], frame_rate, os.path.join(dataset_path, i), raw_data.shape]
+
+        if idx + 1 == size:
+            break
+
     return data
 
 
@@ -62,7 +67,7 @@ def get_waveform_and_digit(file_path, digits):
     This function gets the filepath and the list of the digits(0-9) and return the waveform and the digit_id
     :param file_path:torch.Tensor(str)
     :param digits:numpy.ndarray
-    :return:
+    :return: ( waveform(torch.Tensor(float32)), digit_id(torch.Tensor(int64)) )
     """
     digit = get_digit(file_path)
     audio_binary = tf.io.read_file(file_path)

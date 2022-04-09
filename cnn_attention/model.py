@@ -43,9 +43,9 @@ def norm(train_ds):
     :return:layers.Normalization
     """
 
-    # Instantiate the "tf.keras.layers.Normalization" layer.
+    #Create the "tf.keras.layers.Normalization" layer.
     norm_layer = layers.Normalization()
-    # Fit the state of the layer to the spectrogram's with "Normalization.adapt".
+    #Fit the state of the layer to the spectrogram's with "Normalization.adapt".
     norm_layer.adapt(data=train_ds.map(map_func=lambda spec, label: spec))
     return norm_layer
 
@@ -133,15 +133,13 @@ def fit_model(model, train_ds, val_ds, checkpoint_filepath):
     :return:
     """
 
-    #train the model for 30 epochs
-    EPOCHS = 50
+    #train the model for 100 epochs
+    EPOCHS = 100
     history = model.fit(
         train_ds,
         validation_data=val_ds,
         epochs=EPOCHS,
-        callbacks=[
-            #tf.keras.callbacks.EarlyStopping(verbose=1, patience=20),
-                   tf.keras.callbacks.ModelCheckpoint(save_best_only=True, save_weights_only=True,
+        callbacks=[tf.keras.callbacks.ModelCheckpoint(save_best_only=True, save_weights_only=True,
                                                       filepath=checkpoint_filepath)],
     )
 

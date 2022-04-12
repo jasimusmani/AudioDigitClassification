@@ -213,7 +213,7 @@ def train_model():
     model.load_weights(checkpoint_filepath)
 
     test_acc = predict_model(model, test_spectrogram)
-    print("test accuracy:", test_acc)
+    return test_acc
 
 
 

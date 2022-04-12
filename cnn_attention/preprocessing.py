@@ -33,13 +33,6 @@ def get_data(size=-1):
        and librosa load an audio file as a floating point time series.
        size is for the debugging purposes."""
 
-    url = 'https://drive.google.com/file/d/1TMjMYrTKwOWjYSQw9-JqQZ8vTDCcLLz5/view?usp=sharing'
-    output = 'data/recordings.zip'
-    if not os.path.exists(dataset_path):
-        gdown.download(url, output, quiet=False, fuzzy=True)
-        with zipfile.ZipFile(output, 'r') as zip_ref:
-            zip_ref.extractall('data')
-
     data = pd.DataFrame(columns=['raw_data', 'len', 'duration', 'digit', 'sample_rate', 'dir', 'shape'])
     for idx, i in enumerate(tqdm(os.listdir(dataset_path))):
         raw_data, frame_rate = librosa.load(dataset_path + i, sr=None, mono=False)

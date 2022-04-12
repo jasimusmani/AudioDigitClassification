@@ -11,6 +11,8 @@ import fnmatch
 dataset_path = 'data/recordings/'
 AUTOTUNE = tf.data.AUTOTUNE
 
+#Heavily modified from 'https://www.tensorflow.org/tutorials/audio/simple_audio'
+
 def get_random_shuffle_files(filenames, train_sz=240, val_sz=30, test_sz=30):
     """This function extract recording files and Randomly shuffles them along its first dimension.
         then split the data into train/val/test parts by 90-5-5 percents respectively."""
@@ -23,13 +25,6 @@ def get_random_shuffle_files(filenames, train_sz=240, val_sz=30, test_sz=30):
         val_files.extend(fnames[train_sz:train_sz+val_sz])
         test_files.extend(fnames[-test_sz:])
 
-
-    # filenames = tf.random.shuffle(filenames)
-    #
-    # train_files = filenames[:train_sz]
-    # val_files = filenames[train_sz:train_sz+val_sz]
-    # test_files = filenames[-test_sz:]
-
     return train_files, val_files, test_files
 
 
@@ -37,13 +32,6 @@ def get_data(size=-1):
     """This function put the information of the recording wav into a tabular data structure.
        and librosa load an audio file as a floating point time series.
        size is for the debugging purposes."""
-
-    url = 'https://drive.google.com/file/d/1TMjMYrTKwOWjYSQw9-JqQZ8vTDCcLLz5/view?usp=sharing'
-    output = 'data/recordings.zip'
-    if not os.path.exists(dataset_path):
-        gdown.download(url, output, quiet=False, fuzzy=True)
-        with zipfile.ZipFile(output, 'r') as zip_ref:
-            zip_ref.extractall('data')
 
     data = pd.DataFrame(columns=['raw_data', 'len', 'duration', 'digit', 'sample_rate', 'dir', 'shape'])
     for idx, i in enumerate(tqdm(os.listdir(dataset_path))):
@@ -98,14 +86,14 @@ def get_spectrogram(waveform):
     :param waveform:torch.Tensor(float32)
     :return: spectrogram
     """
-    # Convert the waveform to a spectrogram via a STFT.
+    #Convert the waveforms to spectrograms using STFT.
     spectrogram = tf.signal.stft(waveform, frame_length=255, frame_step=128)
 
-    # Obtain the magnitude of the STFT.
+    #Determine the STFT's magnitude.
     spectrogram = tf.abs(spectrogram)
-    # Add a `channels` dimension, so that the spectrogram can be used
-    # as image-like input data with convolution layers (which expect
-    # shape (`batch_size`, `height`, `width`, `channels`).
+    #Add a channels dimension to the spectrogram so that convolution layers
+    #can use it as image-like input data. (which expect
+    #shape (`batch_size`, `height`, `width`, `channels`).
     spectrogram = spectrogram[..., tf.newaxis]
     return spectrogram
 

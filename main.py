@@ -16,13 +16,15 @@ if __name__ == '__main__':
         with zipfile.ZipFile(output, 'r') as zip_ref:
             zip_ref.extractall('data')
 
-
+    #CNN+Atention Model
     # cnn_attention_accuracy = cnn_attention_model.train_model()
     # print("cnn_attention_accuracy:", cnn_attention_accuracy)
 
+    #LSTM Model
     # lstm_accuracy = lstm_model.train_lstm_model(dataset_path)
     # print("lstm_accuracy:", lstm_accuracy)
 
+    #SVM Model
     svm_accuracy = lstm_model.train_svm_model(dataset_path)
     print("svm_accuracy:", svm_accuracy)
 

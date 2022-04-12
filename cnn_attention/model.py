@@ -49,7 +49,7 @@ def norm(train_ds):
     norm_layer.adapt(data=train_ds.map(map_func=lambda spec, label: spec))
     return norm_layer
 
-
+#Heavily modified from 'https://github.com/kobiso/CBAM-keras/blob/master/models/attention_module.py#L92'
 class SpatialAttention_maxAvg(layers.Layer):
     """
     This function get the layer and add the max and avg attention to the axis=3 and calculate the score map of attention

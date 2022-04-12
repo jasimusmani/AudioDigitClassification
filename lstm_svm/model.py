@@ -55,8 +55,6 @@ def SVM(X, y, cv=3):
     tuned_value = RandomizedSearchCV(SVC(), parameters, cv=cv, n_iter=9)
     tuned_value.fit(X, y)
 
-    # values = tuned_value.best_estimator_.fit(X, y)
-    # return values, tuned_value.best_score_
     return tuned_value
 
 def pre(audio_dir):

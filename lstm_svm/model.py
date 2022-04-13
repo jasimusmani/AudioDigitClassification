@@ -19,8 +19,7 @@ from sklearn.model_selection import RandomizedSearchCV, GridSearchCV
 from sklearn.metrics import confusion_matrix
 
 
-# Bi-directional LSTM model using Sci-kit Learn package
-#The code is PEP8 Compliant
+
 def lstm(data_shape1):
     """This function is the implementation of the Bi-directinoal  for classification.
     Arguments:

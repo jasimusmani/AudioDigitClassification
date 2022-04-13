@@ -22,6 +22,15 @@ from sklearn.metrics import confusion_matrix
 # Bi-directional LSTM model using Sci-kit Learn package
 #The code is PEP8 Compliant
 def lstm(data_shape1):
+    """This function is the implementation of the Bi-directinoal  for classification.
+    Arguments:
+    data_shape1 is the shape of the input fed in the network
+
+
+    return:
+    This function returns the Bi-LSTM model
+
+    """
     model = keras.Sequential()
     model.add(Bidirectional(
         LSTM(50, input_shape=data_shape1, return_sequences=False)))
@@ -59,6 +68,16 @@ def SVM(X, y, cv=3):
     return tuned_value
 
 def pre(audio_dir):
+    """This function is the implementationfor pre-processign and converting
+    the audio sample and generating training adn testing samples.
+    Arguments:
+    audio_dir
+
+
+    return:
+    This function returns the X_train, X_test, y_train and y_test
+
+    """
     imagesDir = "data/spectograms/"
 
     if not os.path.exists(imagesDir):
@@ -99,6 +118,16 @@ def pre(audio_dir):
     return X_train, y_train, X_test, y_test
 
 def train_lstm_model(audio_dir):
+    """
+    This function is for training the Bi-LSTM
+    Arguments:
+    audio_dir: The audio directory
+
+
+    return:
+    This function returns the accuracy of the model
+
+    """
     X_train, y_train, X_test, y_test = pre(audio_dir)
 
     X_train = X_train.reshape((X_train.shape[0], X_train.shape[1], X_train.shape[2] * X_train.shape[3]))
@@ -116,6 +145,17 @@ def train_lstm_model(audio_dir):
     return accuracy_score(y_pred, y_testclass) * 100.
 
 def train_svm_model(audio_dir):
+    """
+    This function is for training the SVM model
+
+    Arguments:
+    audio_dir: The audio directory
+
+
+    return:
+    This function returns the accuracy of the model
+
+    """
     X_train, y_train, X_test, y_test = pre(audio_dir)
 
     X_trainsvm = X_train.reshape(2700, -1)

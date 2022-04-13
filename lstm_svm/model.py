@@ -10,6 +10,7 @@ from tensorflow.keras import layers
 from tensorflow.keras import activations
 from keras.wrappers.scikit_learn import KerasClassifier
 from sklearn.metrics import accuracy_score
+import seaborn as sns
 from lstm_svm import preprocessing
 
 import sklearn
@@ -128,5 +129,8 @@ def train_svm_model(audio_dir):
 
     y_prediction = svmmodel.predict(X_testsvm)
     confusion_matrix(y_test_, y_prediction)
+    plot_confusion_matrix(svmmodel, X_testsvm, y_test_)
+    plt.show()
+
 
     return sklearn.metrics.accuracy_score(y_test_, svmmodel.predict(X_testsvm)) * 100

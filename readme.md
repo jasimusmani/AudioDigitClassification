@@ -6,6 +6,8 @@ To start the development, create a conda/python virtual environment and run the 
 
 <code>pip install -r requirements.txt</code>
 
+Too see the accuracy of different models, change the main comments to what you are looking for.
+
 To run the tests, run the following command:
 
 <code>python -m pytest tests/</code>

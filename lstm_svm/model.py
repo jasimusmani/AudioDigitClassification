@@ -21,7 +21,7 @@ from sklearn.metrics import confusion_matrix
 
 
 def lstm(data_shape1):
-    """This function is the implementation of the Bi-directinoal  for classification.
+    """This function is the implementation of the Bi-directional LSTM for classification.
     Arguments:
     data_shape1 is the shape of the input fed in the network
 

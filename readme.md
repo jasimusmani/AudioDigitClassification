@@ -1,3 +1,6 @@
+# Classification of Digits from Audio Samples
+## Project for COMP 6321: Machine Learning
+
 System requirements:
 
 - Python 3.8

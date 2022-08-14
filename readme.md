@@ -1,6 +1,7 @@
-# Classification of Digits from Audio Samples
+# Classification of Digits from Audio Samples using Machine Learning
 ## Project for COMP 6321: Machine Learning
 
+This a collaborative project where different machine learning algorithms are implemented to classify the digits to its respective classes
 System requirements:
 
 - Python 3.8
